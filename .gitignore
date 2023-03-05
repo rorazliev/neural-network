@@ -1,0 +1,24 @@
+# ide
+.vscode
+.idea
+.DS_Store
+
+# dependencies
+node_modules
+
+# testing
+coverage
+
+# production
+build
+
+# cache
+.cache
+.npm
+
+# env files
+.env
+.env.*
+
+# typescript
+.tsbuildinfo
