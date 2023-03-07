@@ -1,9 +1,12 @@
 import Connection from './connection';
 import Layer from './layer';
+import { activate } from './sigmoid';
+import { InputType, OutputType, DataType } from './types';
 /**
  *
  */
 type OptionsType = {
+	iterations: number;
 	hiddenLayers: Array<number>;
 	inputSize: number;
 	outputSize: number;
@@ -12,6 +15,7 @@ type OptionsType = {
  *
  */
 const defaultOptions: OptionsType = {
+	iterations: 20000,
 	hiddenLayers: [],
 	inputSize: 0,
 	outputSize: 0,
@@ -72,6 +76,69 @@ class NeuralNetwork {
 		}
 
 		this.layers = layers;
+	}
+	/**
+	 * @param {DataType} data
+	 * @return {void}
+	 */
+	public train(data: DataType): void {
+		const iterations = this.options.iterations;
+
+		for (let i = 0; i < iterations; i++) {
+			const { input, output } = data[Math.random() * data.length];
+			this.trainingTick(input, output);
+		}
+	}
+	/**
+	 * @param {InputType} input
+	 * @return {OutputType}
+	 */
+	public run(input: InputType): OutputType {
+		return this.activate(input).runInput();
+	}
+	/**
+	 * @param {InputType} input
+	 * @param {OutputType} output
+	 */
+	protected trainingTick(input: InputType, output: OutputType): void {
+		this.activate(input).runInput();
+	}
+	/**
+	 * @param {InputType} input
+	 * @return {this}
+	 */
+	protected activate(input: InputType): this {
+		const inputLayer = this.layers[0];
+
+		for (let i = 0; i < inputLayer.getSize(); i++) {
+			inputLayer.getNeuron(i).setOutput(input[i]);
+		}
+
+		return this;
+	}
+	/**
+	 * @return {Array<number>}
+	 */
+	protected runInput(): OutputType {
+		const outputs = [];
+
+		for (let l = 1; l < this.layers.length; l++) {
+			const layer = this.layers[l];
+
+			for (let n = 0; n < layer.getSize(); n++) {
+				const neuron = layer.getNeuron(n);
+				const bias = neuron.getBias();
+
+				const sum = neuron.getOutputConnections().reduce((acc, conn) => {
+					return acc + conn.getWeight() * conn.getOrigin().getOutput();
+				}, 0);
+
+				const output = neuron.setOutput(activate(bias + sum)).getOutput();
+				outputs.push(output);
+			}
+		}
+
+		return outputs;
 	}
 }
 
