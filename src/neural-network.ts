@@ -1,6 +1,6 @@
 import Connection from './connection';
 import Layer from './layer';
-import { activate, measure } from './sigmoid';
+import { activate, measure } from './activation/sigmoid';
 import { InputType, OutputType, DataType } from './types';
 /**
  *
