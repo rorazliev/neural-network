@@ -31,11 +31,11 @@ class NeuralNetwork {
 	/**
 	 *
 	 */
-	protected layers: Array<Layer> = [];
+	protected options: OptionsType;
 	/**
 	 *
 	 */
-	protected options: OptionsType;
+	protected layers: Array<Layer> = [];
 	/**
 	 *
 	 */
@@ -51,6 +51,8 @@ class NeuralNetwork {
 		if (inputSize && outputSize) {
 			this.sizes = [inputSize].concat(hiddenLayers, [outputSize]);
 		}
+
+		this.initialize();
 	}
 	/**
 	 *
@@ -89,7 +91,7 @@ class NeuralNetwork {
 		const iterations = this.options.iterations;
 
 		for (let i = 0; i < iterations; i++) {
-			const { input, output } = data[Math.random() * data.length];
+			const { input, output } = data[Math.floor(Math.random() * data.length)];
 			this.trainingTick(input, output);
 		}
 	}
@@ -134,12 +136,14 @@ class NeuralNetwork {
 				const neuron = layer.getNeuron(n);
 				const bias = neuron.getBias();
 
-				const sum = neuron.getOutputConnections().reduce((acc, conn) => {
+				const sum = neuron.getInputConnections().reduce((acc, conn) => {
 					return acc + conn.getWeight() * conn.getOrigin().getOutput();
 				}, 0);
 
 				const output = neuron.setOutput(activate(bias + sum)).getOutput();
-				outputs.push(output);
+				if (l === this.layers.length - 1) {
+					outputs.push(output);
+				}
 			}
 		}
 
@@ -178,14 +182,14 @@ class NeuralNetwork {
 		return this;
 	}
 	/**
-	 * @return {void}
+	 * @return {this}
 	 */
-	protected adjust(): void {
+	protected adjust(): this {
 		for (let l = 1; l <= this.layers.length - 1; l++) {
-			const current = this.layers[l];
+			const layer = this.layers[l];
 
-			for (let n = 0; n < current.getSize(); n++) {
-				const neuron = current.getNeuron(n);
+			for (let n = 0; n < layer.getSize(); n++) {
+				const neuron = layer.getNeuron(n);
 				const delta = neuron.getDelta();
 
 				for (let i = 0; i < neuron.getInputConnections().length; i++) {
@@ -202,6 +206,8 @@ class NeuralNetwork {
 				neuron.setBias(neuron.getBias() + this.options.learningRate * delta);
 			}
 		}
+
+		return this;
 	}
 	/**
 	 * @param {number} delta
