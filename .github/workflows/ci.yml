@@ -17,7 +17,7 @@ jobs:
         run: npm install
 
       - name: Code Quality
-        run: npm run all:check
+        run: npm run check:all
 
       - name: Unit Tests
         run: npm run test:ci
