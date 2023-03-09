@@ -9,6 +9,8 @@ type OptionsType = {
 	iterations: number;
 	hiddenLayers: Array<number>;
 	inputSize: number;
+	learningRate: number;
+	momentum: number;
 	outputSize: number;
 };
 /**
@@ -18,6 +20,8 @@ const defaultOptions: OptionsType = {
 	iterations: 20000,
 	hiddenLayers: [],
 	inputSize: 0,
+	learningRate: 0.3,
+	momentum: 0.1,
 	outputSize: 0,
 };
 /**
@@ -102,7 +106,7 @@ class NeuralNetwork {
 	 */
 	protected trainingTick(input: InputType, output: OutputType): void {
 		this.activate(input).runInput();
-		this.calculateDeltas(output);
+		this.calculateDeltas(output).adjust();
 	}
 	/**
 	 * @param {InputType} input
@@ -160,7 +164,7 @@ class NeuralNetwork {
 					error = target[n] - output;
 				} else {
 					for (let k = 0; k < neuron.getOutputConnections().length; k++) {
-						const connection = neuron.getOutputConnections()[k];
+						const connection = neuron.getOutputConnection(k);
 						error +=
 							connection.getDestination().getDelta() * connection.getWeight();
 					}
@@ -172,6 +176,46 @@ class NeuralNetwork {
 		}
 
 		return this;
+	}
+	/**
+	 * @return {void}
+	 */
+	protected adjust(): void {
+		for (let l = 1; l <= this.layers.length - 1; l++) {
+			const current = this.layers[l];
+
+			for (let n = 0; n < current.getSize(); n++) {
+				const neuron = current.getNeuron(n);
+				const delta = neuron.getDelta();
+
+				for (let i = 0; i < neuron.getInputConnections().length; i++) {
+					const connection = neuron.getInputConnection(i);
+					const change = this.calculateChange(
+						delta,
+						connection.getOrigin().getOutput(),
+						connection.getChange()
+					);
+					connection.setChange(change);
+					connection.setWeight(connection.getWeight() + change);
+				}
+
+				neuron.setBias(neuron.getBias() + this.options.learningRate * delta);
+			}
+		}
+	}
+	/**
+	 * @param {number} delta
+	 * @param {number} output
+	 * @param {number} change
+	 * @return {number}
+	 */
+	protected calculateChange(
+		delta: number,
+		output: number,
+		change: number
+	): number {
+		const { learningRate, momentum } = this.options;
+		return learningRate * delta * output + momentum * change;
 	}
 }
 

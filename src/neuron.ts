@@ -101,6 +101,13 @@ class Neuron {
 		return this;
 	}
 	/**
+	 * @param {number} index
+	 * @return {Connection}
+	 */
+	public getInputConnection(index: number): Connection {
+		return this.inputConnections[index];
+	}
+	/**
 	 * @return {Connection[]}
 	 */
 	public getInputConnections(): Connection[] {
@@ -113,6 +120,13 @@ class Neuron {
 	public addInputConnection(connection: Connection): this {
 		this.inputConnections.push(connection);
 		return this;
+	}
+	/**
+	 * @param {number} index
+	 * @return {Connection}
+	 */
+	public getOutputConnection(index: number): Connection {
+		return this.outputConnections[index];
 	}
 	/**
 	 * @return {Connection[]}
