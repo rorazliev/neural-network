@@ -1,6 +1,6 @@
 import Connection from './connection';
 import Layer from './layer';
-import { activate } from './sigmoid';
+import { activate, measure } from './sigmoid';
 import { InputType, OutputType, DataType } from './types';
 /**
  *
@@ -102,6 +102,7 @@ class NeuralNetwork {
 	 */
 	protected trainingTick(input: InputType, output: OutputType): void {
 		this.activate(input).runInput();
+		this.calculateDeltas(output);
 	}
 	/**
 	 * @param {InputType} input
@@ -139,6 +140,38 @@ class NeuralNetwork {
 		}
 
 		return outputs;
+	}
+	/**
+	 * @param {OutputType} target
+	 * @return {this}
+	 */
+	protected calculateDeltas(target: OutputType): this {
+		const times = this.layers.length - 1;
+
+		for (let l = times; l >= 0; l--) {
+			const layer = this.layers[l];
+
+			for (let n = 0; n < layer.getSize(); n++) {
+				const neuron = layer.getNeuron(n);
+				const output = neuron.getOutput();
+				let error = 0;
+
+				if (l === times) {
+					error = target[n] - output;
+				} else {
+					for (let k = 0; k < neuron.getOutputConnections().length; k++) {
+						const connection = neuron.getOutputConnections()[k];
+						error +=
+							connection.getDestination().getDelta() * connection.getWeight();
+					}
+				}
+
+				neuron.setError(error);
+				neuron.setDelta(measure(output, error));
+			}
+		}
+
+		return this;
 	}
 }
 
