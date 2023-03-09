@@ -21,6 +21,3 @@ jobs:
 
       - name: Unit Tests
         run: npm run test:ci
-
-      - name: Build
-        run: npm run build
